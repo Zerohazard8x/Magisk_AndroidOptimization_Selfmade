@@ -43,27 +43,8 @@ until [[ $COUNT_FINAL == 0 ]]; do
     echo performance >/sys/kernel/gpu/gpu_governor
     #################################################################################
     for cpu_folder in $(find /sys/devices/system/cpu/cpu* -type d -maxdepth 0 | sort); do
-        echo "1" >"$cpu_folder"/online
         echo ondemand >"$cpu_folder"/cpufreq/scaling_governor
         echo performance >"$cpu_folder"/cpufreq/scaling_governor
-        cat "$cpu_folder"/cpufreq/scaling_max_freq
-        RESULT=$?
-        if [ $RESULT == 0 ]; then
-            echohigh=$(cat "$cpu_folder"/cpufreq/scaling_max_freq)
-            echolow=$(cat "$cpu_folder"/cpufreq/scaling_min_freq)
-            echo ${echohigh} >"$cpu_folder"/cpufreq/scaling_min_freq
-            echosum=$(expr $(cat "$cpu_folder"/cpufreq/scaling_max_freq) - $(cat "$cpu_folder"/cpufreq/scaling_min_freq))
-            while [[ $echosum -le 512 ]]; do
-                if [[ $echosum -le 512 ]]; then
-                    return 0
-                fi
-                echo ${echohigh} >"$cpu_folder"/cpufreq/scaling_max_freq
-                echo ${echolow} >"$cpu_folder"/cpufreq/scaling_min_freq
-                echohigh=$(expr $echohigh - 8192)
-                echolow=$(expr $echolow + 8192)
-                echosum=$(expr $(cat "$cpu_folder"/cpufreq/scaling_max_freq) - $(cat "$cpu_folder"/cpufreq/scaling_min_freq))
-            done
-        fi
     done
     setprop service.adb.tcp.port 5555
     stop adbd
